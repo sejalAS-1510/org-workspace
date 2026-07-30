@@ -7,7 +7,7 @@
     "start": "next start -p 3001",
     "test": "vitest run",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "ts-node scripts/seed.ts"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

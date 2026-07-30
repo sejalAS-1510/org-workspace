@@ -104,22 +104,26 @@ export async function POST(req: Request) {
       tokenVersion: user.tokenVersion,
     });
 
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        activeOrgId: activeMembership.orgId,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
+    try {
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          activeOrgId: activeMembership.orgId,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
 
-    await logAudit(prisma, {
-      orgId: activeMembership.orgId,
-      actorId: user.id,
-      action: "LOGIN",
-      entityType: "USER_SESSION",
-      entityId: user.id,
-      metadata: { email: user.email, activeOrgId: activeMembership.orgId },
-    });
+      await logAudit(prisma, {
+        orgId: activeMembership.orgId,
+        actorId: user.id,
+        action: "LOGIN",
+        entityType: "USER_SESSION",
+        entityId: user.id,
+        metadata: { email: user.email, activeOrgId: activeMembership.orgId },
+      });
+    } catch (auditErr) {
+      console.warn("Session/Audit logging warning:", auditErr);
+    }
 
     const response = NextResponse.json({
       success: true,

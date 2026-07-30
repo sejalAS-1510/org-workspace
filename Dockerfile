@@ -3,7 +3,7 @@ FROM node:20-alpine AS base
 
 # Step 1: Dependencies
 FROM base AS deps
-RUN apk add --no-libc6-compat
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./

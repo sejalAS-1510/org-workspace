@@ -15,9 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client & Push DB schema
+# Generate Prisma Client & Push DB schema to /app/dev.db
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV DATABASE_URL "file:./prisma/dev.db"
+ENV DATABASE_URL "file:./dev.db"
 RUN mkdir -p public
 RUN npx prisma generate
 RUN npx prisma db push
@@ -41,9 +41,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/dev.db ./dev.db
 
-# Grant full read-write permissions to database directory
-RUN chmod -R 777 /app/prisma /tmp
+# Grant full read-write permissions to database files & temp directory
+RUN chmod -R 777 /app/prisma /app/dev.db /tmp
 
 USER nextjs
 

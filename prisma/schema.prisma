@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  memberships     OrgMembership[]
+  tickets         Ticket[]
+  prs             PR[]
+  featureFlags    FeatureFlag[]
+  auditLogs       AuditLog[]
+  connectionsFrom OrgConnection[] @relation("ConnectionFrom")
+  connectionsTo   OrgConnection[] @relation("ConnectionTo")
+  digestSettings  DigestSetting[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  memberships    OrgMembership[]
+  sessions       Session[]
+  authoredPRs    PR[]              @relation("PRAuthor")
+  prReviewers    PRReviewer[]
+  ticketComments TicketComment[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  tokenVersion   Int               @default(0)
+}
+
+model OrgMembership {
+  id     String @id @default(cuid())
+  userId String
+  orgId  String
+  role   String
+
+  user User @relation(fields: [userId], references: [id])
+  org  Org  @relation(fields: [orgId], references: [id])
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  activeOrgId String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  userAgent   String?
+  ipAddress   String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Ticket {
+  id          String   @id @default(cuid())
+  orgId       String
+  title       String
+  description String
+  status      String   @default("OPEN")
+  assigneeId  String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org         Org              @relation(fields: [orgId], references: [id])
+  comments    TicketComment[]
+  attachments TicketAttachment[]
+  shares      TicketShare[]
+
+  @@index([orgId])
+  @@index([orgId, status])
+}
+
+model TicketComment {
+  id        String   @id @default(cuid())
+  ticketId  String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
+}
+
+model TicketAttachment {
+  id           String   @id @default(cuid())
+  ticketId     String
+  fileUrl      String
+  fileName     String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId])
+}
+
+model TicketShare {
+  id               String    @id @default(cuid())
+  ticketId         String
+  sharedWithOrgId  String
+  sharedWithUserId String?
+  sharedById       String
+  createdAt        DateTime  @default(now())
+  revokedAt        DateTime?
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@index([sharedWithOrgId])
+  @@index([ticketId])
+}
+
+model FeatureFlag {
+  id      String  @id @default(cuid())
+  orgId   String
+  key     String
+  enabled Boolean @default(false)
+
+  org Org @relation(fields: [orgId], references: [id])
+
+  @@unique([orgId, key])
+}
+
+model PR {
+  id                String    @id @default(cuid())
+  orgId             String
+  title             String
+  description       String
+  status            String    @default("DRAFT")
+  authorId          String
+  requiredApprovals Int       @default(1)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  reviewStartedAt   DateTime?
+
+  org       Org          @relation(fields: [orgId], references: [id])
+  author    User         @relation("PRAuthor", fields: [authorId], references: [id])
+  reviewers PRReviewer[]
+  versions  PRVersion[]
+  shares    PRShare[]
+
+  @@index([orgId])
+  @@index([orgId, status])
+}
+
+model PRReviewer {
+  id        String    @id @default(cuid())
+  prId      String
+  userId    String
+  decision  String    @default("PENDING")
+  comment   String?
+  decidedAt DateTime?
+
+  pr   PR   @relation(fields: [prId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([prId, userId])
+}
+
+model PRVersion {
+  id          String   @id @default(cuid())
+  prId        String
+  versionNum  Int
+  title       String
+  description String
+  snapshotOf  String
+  createdAt   DateTime @default(now())
+
+  pr PR @relation(fields: [prId], references: [id])
+
+  @@unique([prId, versionNum])
+}
+
+model PRShare {
+  id               String    @id @default(cuid())
+  prId             String
+  sharedWithOrgId  String
+  sharedWithUserId String?
+  sharedById       String
+  createdAt        DateTime  @default(now())
+  revokedAt        DateTime?
+
+  pr PR @relation(fields: [prId], references: [id])
+
+  @@index([sharedWithOrgId])
+  @@index([prId])
+}
+
+model OrgConnection {
+  id            String   @id @default(cuid())
+  fromOrgId     String
+  toOrgId       String
+  status        String   @default("PENDING")
+  requestedById String
+  respondedById String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fromOrg Org @relation("ConnectionFrom", fields: [fromOrgId], references: [id])
+  toOrg   Org @relation("ConnectionTo", fields: [toOrgId], references: [id])
+
+  @@unique([fromOrgId, toOrgId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  orgId      String
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   String?
+  sourceRefs String   @default("[]")
+  createdAt  DateTime @default(now())
+
+  org   Org   @relation(fields: [orgId], references: [id])
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([orgId, createdAt])
+  @@index([actorId])
+  @@index([action])
+}
+
+model DigestSetting {
+  id            String  @id @default(cuid())
+  orgId         String
+  intervalHours Int     @default(24)
+  enabled       Boolean @default(true)
+
+  org Org @relation(fields: [orgId], references: [id])
+
+  @@unique([orgId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
+}

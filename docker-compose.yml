@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: froncort-org-workspace
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=super-secret-production-key-froncort-2026
+      - PORT=3001
+    volumes:
+      - sqlite_data:/app/prisma
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spy", "http://localhost:3001/api/auth/me"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sqlite_data:

@@ -21,7 +21,7 @@ ENV DATABASE_URL "file:./prisma/dev.db"
 RUN mkdir -p public
 RUN npx prisma generate
 RUN npx prisma db push
-RUN npm run seed
+RUN node scripts/seed.js
 RUN npm run build
 
 # Step 3: Runner
@@ -30,7 +30,7 @@ WORKDIR /app
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV DATABASE_URL "file:./prisma/dev.db"
+ENV DATABASE_URL "file:/tmp/dev.db"
 ENV PORT 3001
 ENV HOSTNAME "0.0.0.0"
 
@@ -41,6 +41,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Grant full read-write permissions to database directory
+RUN chmod -R 777 /app/prisma /tmp
 
 USER nextjs
 

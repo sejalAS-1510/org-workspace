@@ -17,7 +17,8 @@ COPY . .
 
 # Generate Prisma Client & Push DB schema
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV DATABASE_URL "file:./dev.db"
+ENV DATABASE_URL "file:./prisma/dev.db"
+RUN mkdir -p public
 RUN npx prisma generate
 RUN npx prisma db push
 RUN npm run seed
@@ -29,6 +30,7 @@ WORKDIR /app
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV DATABASE_URL "file:./prisma/dev.db"
 ENV PORT 3001
 ENV HOSTNAME "0.0.0.0"
 
@@ -39,7 +41,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/dev.db ./dev.db
 
 USER nextjs
 

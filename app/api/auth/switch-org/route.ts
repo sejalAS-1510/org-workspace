@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getSessionContext, createJWT } from "@/lib/identity/auth";
+import { prisma } from "../../../../lib/prisma";
+import { getSessionContext, createJWT } from "../../../../lib/identity/auth";
 
 export async function POST(req: Request) {
   const session = await getSessionContext(prisma, req);

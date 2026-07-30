@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getSessionContext } from "@/lib/identity/auth";
-import { reviewPRScoped } from "@/lib/authz/withOrgScope";
-import { assertCan } from "@/lib/authz/permissions";
-import { logAudit } from "@/lib/audit/audit";
+import { prisma } from "../../../../../lib/prisma";
+import { getSessionContext } from "../../../../../lib/identity/auth";
+import { reviewPRScoped } from "../../../../../lib/authz/withOrgScope";
+import { assertCan } from "../../../../../lib/authz/permissions";
+import { logAudit } from "../../../../../lib/audit/audit";
 
 export async function POST(
   req: Request,

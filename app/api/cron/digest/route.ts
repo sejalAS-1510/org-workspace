@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { generateDigestForUser } from "@/lib/digest/generateDigest";
+import { prisma } from "../../../../lib/prisma";
+import { generateDigestForUser } from "../../../../lib/digest/generateDigest";
 
 export async function POST(req: Request) {
   try {

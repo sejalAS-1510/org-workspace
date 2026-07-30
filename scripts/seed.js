@@ -3,13 +3,19 @@
  */
 
 const { PrismaClient } = require("@prisma/client");
-const argon2 = require("argon2");
+const crypto = require("crypto");
 
 const prisma = new PrismaClient();
 const DEMO_PASSWORD = "Passw0rd!";
 
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
+  return `${salt}:${derivedKey}`;
+}
+
 async function main() {
-  const passwordHash = await argon2.hash(DEMO_PASSWORD);
+  const passwordHash = hashPassword(DEMO_PASSWORD);
 
   // Clean wipe for idempotent seeding
   await prisma.auditLog.deleteMany();

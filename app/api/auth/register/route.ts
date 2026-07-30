@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/identity/auth";
 import { logAudit } from "@/lib/audit/audit";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key-froncort-2026";
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User with this email already exists." }, { status: 400 });
     }
 
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await hashPassword(password);
 
     // Target organization name & role
     const targetOrgName = orgName?.trim() || "My Organization";

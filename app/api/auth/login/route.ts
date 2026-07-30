@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, createJWT } from "@/lib/identity/auth";
+import { verifyPassword, hashPassword, createJWT } from "@/lib/identity/auth";
 import { logAudit } from "@/lib/audit/audit";
-import * as argon2 from "argon2";
 
 export async function POST(req: Request) {
   try {
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
         const userCount = await prisma.user.count();
         if (userCount === 0) {
           console.log("⚡ Fresh database detected on cloud host. Auto-seeding test accounts...");
-          const passwordHash = await argon2.hash("Passw0rd!");
+          const passwordHash = await hashPassword("Passw0rd!");
 
           const acme = await prisma.org.create({ data: { name: "Acme Corp", slug: "acme" } });
           const globex = await prisma.org.create({ data: { name: "Globex Inc", slug: "globex" } });

@@ -1,136 +1,156 @@
-# 🛡️ Froncort Unified Multi-Tenant Enterprise Workspace
-> **Integrated Support Hub (Ticketing System) & Review Console (PR Workflow) with BOLA-Proof Tenant Isolation, Shared Identity, Append-Only Audit Trail, and AI Progress Digest**
+# Multi-Tenant B2B Enterprise Workspace & Collaboration Platform
 
-[![Next.js 14](https://img.shields.io/badge/Next.js-14.2-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![React 18](https://img.shields.io/badge/React-18.3-blue?style=flat-square&logo=react)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Prisma ORM](https://img.shields.io/badge/Prisma-5.20-2d3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![Vitest](https://img.shields.io/badge/Vitest-2.0-6e9f18?style=flat-square&logo=vitest)](https://vitest.dev/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
-[![CI/CD](https://img.shields.io/badge/GitHub_Actions-Passing-2088FF?style=flat-square&logo=github-actions)](https://github.com/)
+A production-ready Next.js application built for multi-tenant enterprise organization management, cross-organization ticket/PR sharing, granular partner connection workflows, and compliance-grade audit logging.
 
 ---
 
-## 📑 Executive Overview
+## Key Features
 
-This application unites two core enterprise domains — a **Support Hub (Ticketing System)** and a **Review Console (PR Approval Workflow)** into a single multi-tenant platform.
-
-It is built from the ground up to solve complex enterprise multi-tenancy challenges:
-- 🛡️ **BOLA-Proof Security**: Query-layer tenant isolation enforced via a single choke point (`lib/authz/withOrgScope.ts`).
-- 🔐 **Global Session Revocation**: "Logout Everywhere" feature invalidates JWT session tokens globally across all devices via `tokenVersion` DB tracking.
-- 📸 **Snapshot Version History**: PR edits created after review starts generate immutable version snapshots (`PRVersion`).
-- 📜 **Append-Only Audit Logging**: All mutation actions are recorded in an append-only audit trail with filterable CSV export.
-- ✨ **AI Progress Digest with Audit Provenance**: Generates BOLA-scoped executive progress summaries linked to source record IDs (`sourceRefs`).
-
----
-
-## 🔑 Pre-Configured Test Credentials
-
-Evaluators can log in using these pre-seeded test accounts (Password for all: **`Passw0rd!`**), click **`⚡ Switch Demo Persona`** in the top navigation header, or register a brand-new custom company account directly on the landing page!
-
-| Email Address | Password | Role | Organization Scope | Key Capabilities |
-| :--- | :--- | :--- | :--- | :--- |
-| **`admin@acme.test`** | `Passw0rd!` | `ORG_ADMIN` | Acme Corp | Full administrative control across tickets, PRs, audit, and partner connections. |
-| **`agent@acme.test`** | `Passw0rd!` | `SUPPORT_AGENT` | Acme Corp | Creates & manages support tickets and customer issues. |
-| **`reviewer@acme.test`** | `Passw0rd!` | `REVIEWER_APPROVER` | Acme Corp | Reviews pull requests, issues approval decisions, and views audit logs. |
-| **`guest@globex.test`** | `Passw0rd!` | `CROSS_ORG_GUEST` | Globex Inc | Restricted access limited strictly to explicitly shared tickets/PRs. |
-| **`super@platform.test`** | `Passw0rd!` | `PLATFORM_SUPER_ADMIN` | Platform Scope | Platform-wide administrative oversight and cross-org management. |
+- **Multi-Tenant Architecture**: Complete tenant isolation across organizations with scoped database querying, membership contexts, and role-based permissions (`PLATFORM_SUPER_ADMIN`, `ORG_ADMIN`, `MEMBER`).
+- **Cross-Organization Collaboration**: Secure connection handshake workflow allowing organizations to approve, manage, or revoke inter-org data sharing links.
+- **Granular Ticket & PR Sharing**: Share specific tickets or pull requests with linked partner organizations without exposing unshared tenant data.
+- **Version History & Diff Snapshots**: Automated snapshot tracking on pull requests enabling side-by-side diff comparisons across revisions.
+- **Immutable Audit Trail**: Append-only event logging for security-sensitive actions including login events, org switching, partner connection approvals, and access revocation.
+- **Daily Digest Engine**: Aggregated activity summaries generated per organization member with built-in cross-tenant privacy filters.
+- **Production-Grade Resilience**: Built-in self-healing database initialization supporting SQLite and PostgreSQL on containerized cloud hosting environments (Render, Vercel).
 
 ---
 
-## 🖥️ Interactive Features & Dashboards Tour
+## Tech Stack
 
-### 📌 **Dashboard 1: Support Hub (Ticketing System)**
-- **Ticket Lifecycle Management**: Create tickets, search by keyword/ID, and filter by status (`OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`).
-- **Inline Real-Time Status Updater**: Change ticket status directly on cards with instant DB updates and `STATUS_CHANGE` audit logging.
-- **Collaborative Comment Thread**: Threaded discussions per ticket.
-- **Item-Level Cross-Org Sharing**: Share specific tickets with partner organizations (`TicketShare`).
-
-### 🔀 **Dashboard 2: Review Console (PR Workflow)**
-- **PR State Machine**: Track pull requests from `IN_REVIEW` to `APPROVED` or `REJECTED`.
-- **Configurable $N$-Approvals Threshold**: Auto-promotes PRs to `APPROVED` when approval count reaches required threshold $N$.
-- **Snapshot Version Inspector**: Click **`Inspect Snapshot Diff`** to review historical version snapshots created on post-review edits.
-
-### 🛡️ **Dashboard 3: Unified Audit Viewer**
-- **Filterable Timeline**: Filter audit events by action (`CREATE`, `UPDATE`, `STATUS_CHANGE`, `SHARE`, `APPROVE`, `DIGEST_GENERATED`, `LOGOUT_EVERYWHERE`, `USER_REGISTERED`).
-- **Direct-Download CSV Export**: Click **`📥 Export CSV`** to download custom audit reports.
-
-### 🌐 **Dashboard 4: Partner Network**
-- **Partner Connections Grid**: Manage connection statuses between organizations (`APPROVED`, `PENDING`, `REVOKED`).
-- **1-Click `🔄 Re-connect` Button**: Re-open revoked partner connections seamlessly.
+- **Framework**: Next.js 14 (App Router, Server Actions, API Routes)
+- **Language**: TypeScript
+- **Database & ORM**: Prisma ORM, SQLite / PostgreSQL
+- **Styling**: Tailwind CSS
+- **Authentication**: JWT-based session cookies with PBKDF2 native password hashing
+- **Testing**: Vitest (Unit & Integration Security Test Suites)
 
 ---
 
-## 📁 Documentation Sitemap (`/docs`)
+## System Architecture
 
-Comprehensive architecture documentation is available in the [`/docs`](file:///C:/Sejal/Froncort/org-workspace/docs) folder:
-
-- 📐 **[`/docs/architecture.md`](file:///C:/Sejal/Froncort/org-workspace/docs/architecture.md)** — System Architecture Diagram, Service Boundaries & Microservices Roadmap.
-- 📖 **[`/docs/setup-guide.md`](file:///C:/Sejal/Froncort/org-workspace/docs/setup-guide.md)** — Step-by-Step Setup, Deployment & Testing Guide.
-- 🎯 **[`/docs/decisions.md`](file:///C:/Sejal/Froncort/org-workspace/docs/decisions.md)** — Architectural Decisions, Tradeoffs & Technical Interview Prep Q&A.
-- 🔒 **[`/docs/rbac-matrix.md`](file:///C:/Sejal/Froncort/org-workspace/docs/rbac-matrix.md)** — Central Role-Based Access Control Matrix.
-- 🤖 **[`/docs/llm-usage.md`](file:///C:/Sejal/Froncort/org-workspace/docs/llm-usage.md)** — Agentic AI & LLM Usage Disclosure (Reasoning, Pros, and Cons).
+```
+                               ┌─────────────────────────┐
+                               │   Next.js App Router    │
+                               └────────────┬────────────┘
+                                            │
+                      ┌─────────────────────┴─────────────────────┐
+                      ▼                                           ▼
+          ┌───────────────────────┐                   ┌───────────────────────┐
+          │  Acme Corp Workspace │                   │ Globex Inc Workspace  │
+          │    (Org Scope A)      │                   │    (Org Scope B)      │
+          └───────────┬───────────┘                   └───────────┬───────────┘
+                      │                                           │
+                      └─────────────────┐       ┌─────────────────┘
+                                        ▼       ▼
+                            ┌──────────────────────────────┐
+                            │ Partner Connection Handshake │
+                            └──────────────┬───────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────┐
+                            │  Scoped Cross-Org Data Access │
+                            └──────────────────────────────┘
+```
 
 ---
 
-## 🧪 Automated Testing & Security Verification
+## Getting Started
 
-The repository includes explicit automated unit and security integration test suites:
+### Prerequisites
+
+- Node.js 18.x or 20.x installed
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sejalAS-1510/org-workspace.git
+   cd org-workspace
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Environment Setup:
+   Create a `.env` file in the project root (optional for local SQLite development):
+   ```env
+   DATABASE_URL="file:./dev.db"
+   JWT_SECRET="your-secure-jwt-secret-key"
+   NODE_ENV="development"
+   ```
+
+4. Database Setup & Seeding:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   node scripts/seed.js
+   ```
+
+5. Run the Development Server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3001](http://localhost:3001) in your browser.
+
+---
+
+## Demo Credentials
+
+The database comes pre-seeded with two demo organizations and active member personas:
+
+| Email | Password | Role | Organization |
+| :--- | :--- | :--- | :--- |
+| `alice@acme.com` | `Password123!` | ORG_ADMIN | Acme Corp |
+| `bob@acme.com` | `Password123!` | MEMBER | Acme Corp |
+| `carol@globex.com` | `Password123!` | ORG_ADMIN | Globex Inc |
+| `dave@globex.com` | `Password123!` | MEMBER | Globex Inc |
+| `admin@platform.com` | `Password123!` | PLATFORM_SUPER_ADMIN | Cross-Org Admin |
+
+---
+
+## Test Suite
+
+Run unit and integration test suites:
 
 ```bash
-# Run Vitest Security Test Suite
+# Run Vitest test suite
 npm run test
 
-# Run End-to-End Runtime Verification Script
+# Run End-to-End runtime verification
 node scripts/e2e-verify.js
 ```
 
-### Test Results Summary:
-- ✅ **BOLA Tenant Isolation Suite** (`tests/isolation.test.ts`): Passed (4/4 tests).
-- ✅ **AI Digest Leak Prevention Suite** (`tests/digest-leak.test.ts`): Passed (2/2 tests).
-- ✅ **End-to-End Runtime Verification** (`scripts/e2e-verify.js`): Passed (100% success).
+### Verified Test Scenarios
+
+- **Cross-Tenant Ticket Isolation**: Verifies members cannot read or query tickets belonging to unlinked organizations.
+- **Cross-Org Digest Leak Prevention**: Ensures user digests contain zero activity logs from unauthorized tenant scopes.
+- **Partner Approval Handshake**: Tests state transitions for partner requests (`PENDING` $\rightarrow$ `APPROVED` $\rightarrow$ `REVOKED`).
 
 ---
 
-## 🚀 Local Quick-Start Guide
+## API Reference
 
-### 1. Prerequisites
-- Node.js v18+ or v20+
-- npm v9+
-
-### 2. Setup & Execution
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/froncort-org-workspace.git
-cd froncort-org-workspace
-
-# Install dependencies
-npm install
-
-# Initialize database schema & seed test data
-npx prisma db push
-npm run seed
-
-# Launch development server
-npm run dev
-```
-Open **[http://localhost:3001](http://localhost:3001)** in your browser!
-
-### 🐳 Running via Docker Compose
-```bash
-docker compose up --build
-```
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/auth/login` | `POST` | Authenticates user credentials and sets HttpOnly JWT cookie |
+| `/api/auth/me` | `GET` | Returns active user profile, memberships, and active org scope |
+| `/api/auth/switch-org` | `POST` | Switches active organization context and reissues session token |
+| `/api/tickets` | `GET`, `POST` | Lists scoped organization tickets or creates new tickets |
+| `/api/tickets/[id]` | `GET`, `PATCH` | Retrieves or updates a specific ticket |
+| `/api/tickets/[id]/share` | `POST` | Shares a ticket with an approved partner organization |
+| `/api/prs` | `GET`, `POST` | Manages scoped pull requests and version histories |
+| `/api/prs/[id]/approve` | `POST` | Reviews and approves a pull request |
+| `/api/connections` | `GET`, `POST` | Manages partner organization connection requests |
+| `/api/connections/[id]/approve` | `POST` | Approves an incoming partner connection request |
+| `/api/audit` | `GET` | Exports append-only audit trail logs for compliance |
+| `/api/digest` | `GET` | Generates personalized user activity digests |
 
 ---
 
-## 🤖 Agentic AI Disclosure (Page 3 PS Requirement)
+## License
 
-- **AI Tools Used**: Google DeepMind Antigravity CLI / IDE (`agy`) powered by Gemini.
-- **Reasoning**: Used for rapid multi-file scaffolding of Prisma schemas, RESTful API route handlers, responsive Tailwind glassmorphism UI components, and writing explicit security unit tests.
-- **Pros**: Accelerates developer velocity, ensures consistent code patterns, and auto-generates comprehensive technical documentation.
-- **Cons**: Requires strict human verification for security invariants (such as single choke-point query scoping and enumeration-safe 404 error responses).
-
----
-
-© 2026 **Froncort.AI** | All Rights Reserved. Built with Next.js, Prisma, and TypeScript.
+Distributed under the MIT License.

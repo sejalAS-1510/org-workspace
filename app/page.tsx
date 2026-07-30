@@ -101,15 +101,20 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToUse, password: passwordToUse }),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: `Server error (${res.status} ${res.statusText})` };
+      }
       if (!res.ok) {
-        setAuthError(data.error || "Login failed");
+        setAuthError(data.error || `Login failed (${res.status})`);
         setUser(null);
       } else {
         setUser(data.user);
       }
-    } catch {
-      setAuthError("Network error during login");
+    } catch (err: any) {
+      setAuthError(`Network connection error: ${err?.message || "Server unreachable"}`);
     } finally {
       setLoading(false);
     }
@@ -136,15 +141,20 @@ export default function Home() {
           role: regRole,
         }),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: `Server error (${res.status} ${res.statusText})` };
+      }
       if (!res.ok) {
-        setAuthError(data.error || "Registration failed");
+        setAuthError(data.error || `Registration failed (${res.status})`);
         setUser(null);
       } else {
         setUser(data.user);
       }
-    } catch {
-      setAuthError("Network error during registration");
+    } catch (err: any) {
+      setAuthError(`Network connection error: ${err?.message || "Server unreachable"}`);
     } finally {
       setLoading(false);
     }

@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && prisma db push && next build",
-    "start": "next start",
+    "build": "prisma generate && next build",
+    "start": "node scripts/init-db.js && next start",
     "test": "vitest run",
     "prisma:migrate": "prisma migrate dev",
     "seed": "node scripts/seed.js"

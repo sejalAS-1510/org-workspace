@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyPassword, hashPassword, createJWT } from "@/lib/identity/auth";
-import { logAudit } from "@/lib/audit/audit";
+import { prisma } from "../../../../lib/prisma";
+import { verifyPassword, hashPassword, createJWT } from "../../../../lib/identity/auth";
+import { logAudit } from "../../../../lib/audit/audit";
 
 export async function POST(req: Request) {
   try {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/identity/auth";
-import { logAudit } from "@/lib/audit/audit";
+import { prisma } from "../../../../lib/prisma";
+import { hashPassword } from "../../../../lib/identity/auth";
+import { logAudit } from "../../../../lib/audit/audit";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key-froncort-2026";
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getSessionContext } from "@/lib/identity/auth";
-import { assertCan } from "@/lib/authz/permissions";
+import { prisma } from "../../../lib/prisma";
+import { getSessionContext } from "../../../lib/identity/auth";
+import { assertCan } from "../../../lib/authz/permissions";
 
 export async function GET(req: Request) {
   const session = await getSessionContext(prisma, req);

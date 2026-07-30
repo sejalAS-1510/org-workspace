@@ -1,153 +1,145 @@
-# Multi-Tenant B2B Enterprise Workspace & Collaboration Platform
+# Unified Org Workspace (Ticketing + PR/Audit Console)
 
-A production-ready Next.js application built for multi-tenant enterprise organization management, cross-organization ticket/PR sharing, granular partner connection workflows, and compliance-grade audit logging.
-
----
-
-## Key Features
-
-- **Multi-Tenant Architecture**: Complete tenant isolation across organizations with scoped database querying, membership contexts, and role-based permissions (`PLATFORM_SUPER_ADMIN`, `ORG_ADMIN`, `MEMBER`).
-- **Cross-Organization Collaboration**: Secure connection handshake workflow allowing organizations to approve, manage, or revoke inter-org data sharing links.
-- **Granular Ticket & PR Sharing**: Share specific tickets or pull requests with linked partner organizations without exposing unshared tenant data.
-- **Version History & Diff Snapshots**: Automated snapshot tracking on pull requests enabling side-by-side diff comparisons across revisions.
-- **Immutable Audit Trail**: Append-only event logging for security-sensitive actions including login events, org switching, partner connection approvals, and access revocation.
-- **Daily Digest Engine**: Aggregated activity summaries generated per organization member with built-in cross-tenant privacy filters.
-- **Production-Grade Resilience**: Built-in self-healing database initialization supporting SQLite and PostgreSQL on containerized cloud hosting environments (Render, Vercel).
+A multi-tenant enterprise workspace platform featuring a shared JWT identity layer, cross-organization partner collaboration, and append-only audit logging across two integrated dashboards: the **Support Hub** (ticketing) and the **Review & Audit Console** (PR workflow).
 
 ---
 
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router, Server Actions, API Routes)
-- **Language**: TypeScript
-- **Database & ORM**: Prisma ORM, SQLite / PostgreSQL
-- **Styling**: Tailwind CSS
-- **Authentication**: JWT-based session cookies with PBKDF2 native password hashing
-- **Testing**: Vitest (Unit & Integration Security Test Suites)
-
----
-
-## System Architecture
+## Architecture Overview
 
 ```
-                               ┌─────────────────────────┐
-                               │   Next.js App Router    │
-                               └────────────┬────────────┘
-                                            │
-                      ┌─────────────────────┴─────────────────────┐
-                      ▼                                           ▼
-          ┌───────────────────────┐                   ┌───────────────────────┐
-          │  Acme Corp Workspace │                   │ Globex Inc Workspace  │
-          │    (Org Scope A)      │                   │    (Org Scope B)      │
-          └───────────┬───────────┘                   └───────────┬───────────┘
-                      │                                           │
-                      └─────────────────┐       ┌─────────────────┘
-                                        ▼       ▼
-                            ┌──────────────────────────────┐
-                            │ Partner Connection Handshake │
-                            └──────────────┬───────────────┘
-                                           │
-                                           ▼
-                            ┌──────────────────────────────┐
-                            │  Scoped Cross-Org Data Access │
-                            └──────────────────────────────┘
+                                 ┌─────────────────────────────────┐
+                                 │   Central Identity & Org Layer  │
+                                 │   (JWT Session, PBKDF2 Auth)   │
+                                 └────────────────┬────────────────┘
+                                                  │
+                        ┌─────────────────────────┴─────────────────────────┐
+                        ▼                                                   ▼
+            ┌───────────────────────┐                           ┌───────────────────────┐
+            │     Dashboard 1       │                           │      Dashboard 2      │
+            │      Support Hub      │                           │ Review & Audit Console│
+            │  (Tickets & Sharing)  │                           │   (PRs & Audit Log)   │
+            └───────────┬───────────┘                           └───────────┬───────────┘
+                        │                                                   │
+                        └─────────────────────────┬─────────────────────────┘
+                                                  │
+                                                  ▼
+                                 ┌─────────────────────────────────┐
+                                 │      Prisma DB / Self-Healing    │
+                                 │     Strict BOLA Query Scoping   │
+                                 └─────────────────────────────────┘
 ```
 
 ---
 
-## Getting Started
+## Core Capabilities
 
-### Prerequisites
+### 1. Shared Identity & Session Synchronization
+- **Central Auth Service**: Single source of truth for users, organization memberships, and role assignments across both dashboards.
+- **Context-Aware Org Switcher**: Switch active organization scope on demand with instant JWT token re-issuance.
+- **Global Token Revocation**: "Logout Everywhere" invalidates all active sessions by incrementing the user's `tokenVersion`.
 
-- Node.js 18.x or 20.x installed
-- npm or yarn
+### 2. Dashboard 1 — Support Hub
+- **Ticket Lifecycle**: Complete CRUD operations, status management, attachments, and threaded comments.
+- **Strict BOLA Enforcement**: Multi-tenancy enforced strictly at the database query level (`withOrgScope`), preventing unauthorized access via direct API ID manipulation.
+- **Per-Tenant Feature Flags**: Dynamically toggle feature availability per organization.
+- **Item-Level Cross-Org Sharing**: Share individual tickets with linked partner organizations without granting access to unshared workspace data.
 
-### Installation
+### 3. Dashboard 2 — Review & Audit Console
+- **PR Workflow Engine**: Manage pull requests across states (`DRAFT` $\rightarrow$ `IN_REVIEW` $\rightarrow$ `APPROVED` / `REJECTED` $\rightarrow$ `MERGED`).
+- **N-Approvals Rule**: Configurable reviewer approval threshold enforcing policy compliance before merge.
+- **Revision Diff Snapshots**: Every edit made after review start creates a version snapshot with a side-by-side diff viewer.
+- **Unified Audit Viewer**: Searchable, filterable timeline spanning all system mutations, with CSV export capabilities.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sejalAS-1510/org-workspace.git
-   cd org-workspace
-   ```
+### 4. Cross-Organization Collaboration
+- **Partner Handshake**: Connection request, approval, and revocation workflow between distinct organizations.
+- **Restricted Guest Access**: External users from partner orgs receive view/comment-only privileges on explicitly shared items.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Environment Setup:
-   Create a `.env` file in the project root (optional for local SQLite development):
-   ```env
-   DATABASE_URL="file:./dev.db"
-   JWT_SECRET="your-secure-jwt-secret-key"
-   NODE_ENV="development"
-   ```
-
-4. Database Setup & Seeding:
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   node scripts/seed.js
-   ```
-
-5. Run the Development Server:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3001](http://localhost:3001) in your browser.
+### 5. AI Progress Tracker & Digest Engine
+- **Personalized Digests**: Aggregated summary of assigned tickets, pending PR reviews, and idle item metrics.
+- **Scheduled Background Delivery**: Cron-triggered background job execution (`/api/cron/digest`) with zero page-load compute overhead.
+- **Cross-Tenant Privacy Guarantee**: Digest computation strictly scopes data to the user's active org and shared items, covered by automated leak tests.
 
 ---
 
-## Demo Credentials
+## Role-Based Access Control (RBAC)
 
-The database comes pre-seeded with two demo organizations and active member personas:
+| Role | Scope of Access |
+| :--- | :--- |
+| **Org Admin** | Full administration within their organization across both dashboards |
+| **Support Agent** | Support Hub only; manages organization tickets |
+| **Reviewer / Approver** | Both dashboards: PR review workflow, ticket reviews, and unified audit viewer |
+| **Cross-Org Guest** | Read & comment access to explicitly shared tickets/PRs from partner orgs |
+| **Platform Super Admin** | Platform-wide management, cross-org connection oversight, and global settings |
+
+---
+
+## Demo Test Credentials
 
 | Email | Password | Role | Organization |
 | :--- | :--- | :--- | :--- |
-| `alice@acme.com` | `Password123!` | ORG_ADMIN | Acme Corp |
-| `bob@acme.com` | `Password123!` | MEMBER | Acme Corp |
-| `carol@globex.com` | `Password123!` | ORG_ADMIN | Globex Inc |
-| `dave@globex.com` | `Password123!` | MEMBER | Globex Inc |
-| `admin@platform.com` | `Password123!` | PLATFORM_SUPER_ADMIN | Cross-Org Admin |
+| `alice@acme.com` | `Password123!` | Org Admin | Acme Corp |
+| `bob@acme.com` | `Password123!` | Member | Acme Corp |
+| `carol@globex.com` | `Password123!` | Org Admin | Globex Inc |
+| `dave@globex.com` | `Password123!` | Member | Globex Inc |
+| `admin@platform.com` | `Password123!` | Platform Super Admin | Cross-Org Platform Scope |
 
 ---
 
-## Test Suite
+## Quick Start & Local Setup
 
-Run unit and integration test suites:
+### 1. Clone & Install
+```bash
+git clone https://github.com/sejalAS-1510/org-workspace.git
+cd org-workspace
+npm install
+```
+
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
+```env
+DATABASE_URL="file:./prisma/dev.db"
+JWT_SECRET="your-secure-jwt-secret-key"
+NODE_ENV="development"
+```
+
+### 3. Initialize & Seed Database
+```bash
+npx prisma generate
+npx prisma db push
+node scripts/seed.js
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3001](http://localhost:3001) in your browser.
+
+---
+
+## Automated Verification & Test Suites
+
+Run the test suite to verify security constraints and tenant isolation:
 
 ```bash
-# Run Vitest test suite
+# Run Vitest Security Tests (BOLA isolation & Digest leak prevention)
 npm run test
 
-# Run End-to-End runtime verification
+# Run Comprehensive E2E Runtime Verification
 node scripts/e2e-verify.js
 ```
 
-### Verified Test Scenarios
-
-- **Cross-Tenant Ticket Isolation**: Verifies members cannot read or query tickets belonging to unlinked organizations.
-- **Cross-Org Digest Leak Prevention**: Ensures user digests contain zero activity logs from unauthorized tenant scopes.
-- **Partner Approval Handshake**: Tests state transitions for partner requests (`PENDING` $\rightarrow$ `APPROVED` $\rightarrow$ `REVOKED`).
-
 ---
 
-## API Reference
+## Repository Documentation (`/docs`)
 
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/auth/login` | `POST` | Authenticates user credentials and sets HttpOnly JWT cookie |
-| `/api/auth/me` | `GET` | Returns active user profile, memberships, and active org scope |
-| `/api/auth/switch-org` | `POST` | Switches active organization context and reissues session token |
-| `/api/tickets` | `GET`, `POST` | Lists scoped organization tickets or creates new tickets |
-| `/api/tickets/[id]` | `GET`, `PATCH` | Retrieves or updates a specific ticket |
-| `/api/tickets/[id]/share` | `POST` | Shares a ticket with an approved partner organization |
-| `/api/prs` | `GET`, `POST` | Manages scoped pull requests and version histories |
-| `/api/prs/[id]/approve` | `POST` | Reviews and approves a pull request |
-| `/api/connections` | `GET`, `POST` | Manages partner organization connection requests |
-| `/api/connections/[id]/approve` | `POST` | Approves an incoming partner connection request |
-| `/api/audit` | `GET` | Exports append-only audit trail logs for compliance |
-| `/api/digest` | `GET` | Generates personalized user activity digests |
+Detailed documentation is available in the [`/docs`](./docs) folder:
+
+- [`docs/architecture.md`](./docs/architecture.md): System architecture, module boundaries, and tenant isolation design.
+- [`docs/setup-guide.md`](./docs/setup-guide.md): Complete setup guide and environment configuration.
+- [`docs/decisions.md`](./docs/decisions.md): Architectural trade-offs, design decisions, and future scaling plans.
+- [`docs/rbac-matrix.md`](./docs/rbac-matrix.md): Granular permission matrix per endpoint and role.
+- [`docs/llm-usage.md`](./docs/llm-usage.md): Agentic IDE and LLM tooling breakdown.
 
 ---
 

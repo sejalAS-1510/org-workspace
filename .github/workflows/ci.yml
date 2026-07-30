@@ -22,12 +22,13 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Initialize Database Schema
+      - name: Initialize Database Schema & Seed Data
         env:
           DATABASE_URL: "file:./dev.db"
         run: |
+          npx prisma generate
           npx prisma db push
           npm run seed
 
@@ -36,6 +37,12 @@ jobs:
           DATABASE_URL: "file:./dev.db"
           JWT_SECRET: "test-jwt-secret-key-12345"
         run: npm run test
+
+      - name: Run End-to-End Verification
+        env:
+          DATABASE_URL: "file:./dev.db"
+          JWT_SECRET: "test-jwt-secret-key-12345"
+        run: node scripts/e2e-verify.js
 
       - name: Build Next.js Production App
         env:

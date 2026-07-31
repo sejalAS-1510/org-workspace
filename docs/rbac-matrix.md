@@ -1,32 +1,34 @@
-# RBAC Matrix
+# Role-Based Access Control (RBAC) Permission Matrix
 
-Source of truth is `lib/authz/permissions.ts` — this table is a readable
-mirror of it. If they drift, the code wins; update this file to match.
+This document defines the system-wide permissions assigned to each organizational role across the **Support Hub (Dashboard 1)**, **Review & Audit Console (Dashboard 2)**, and **Platform Administration**.
 
-| Permission                  | Org Admin | Support Agent | Reviewer/Approver | Cross-Org Guest | Platform Super Admin |
-|------------------------------|:---:|:---:|:---:|:---:|:---:|
-| Create ticket                | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Read own-org tickets         | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Read shared ticket           | — | — | — | ✅ | ❌ |
-| Update / delete ticket       | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Comment on own-org ticket    | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Comment on shared ticket     | — | — | — | ✅ | ❌ |
-| Share ticket cross-org       | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Create PR                    | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Review / approve PR          | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Comment on shared PR         | — | — | — | ✅ | ❌ |
-| Read unified audit trail     | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Manage org members           | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Manage feature flags         | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Request/approve/revoke connection | ✅ | ❌ | ❌ | ❌ | ✅ (approve/revoke) |
-| Manage orgs (platform-wide)  | ❌ | ❌ | ❌ | ❌ | ✅ |
+---
 
-Notes:
-- Cross-Org Guest permissions only ever apply to items explicitly shared
-  with them — there is no "read all tickets" grant for this role, by
-  design. See `TicketShare`/`PRShare` in the schema.
-- Platform Super Admin is scoped to platform administration (orgs,
-  connections, global settings) — it is deliberately **not** a backdoor
-  into every org's ticket/PR content. If a support/debugging use case
-  needs that later, it should be a separate, explicitly audited
-  "impersonation" action, not a blanket permission.
+## Permission Matrix
+
+| Action / Permission | Org Admin | Support Agent | Reviewer / Approver | Cross-Org Guest | Platform Super Admin |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Create Ticket** (`ticket:create`) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Read Own-Org Tickets** (`ticket:read:own_org`) | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Read Shared Tickets** (`ticket:read:shared`) | — | — | — | ✅ | ❌ |
+| **Update / Delete Tickets** (`ticket:update`, `ticket:delete`) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Comment on Own-Org Tickets** (`ticket:comment:own_org`) | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Comment on Shared Tickets** (`ticket:comment:shared`) | — | — | — | ✅ | ❌ |
+| **Share Ticket Cross-Org** (`ticket:share`) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Create Pull Request** (`pr:create`) | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Review / Approve PR** (`pr:review`, `pr:approve`) | ✅ | ❌ | ✅ | ❌ | ❌ |
+| **Comment on Shared PR** (`pr:comment:shared`) | — | — | — | ✅ | ❌ |
+| **Read Unified Audit Trail** (`audit:read:unified`) | ✅ | ❌ | ✅ | ❌ | ✅ |
+| **Manage Org Members & Feature Flags** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Request / Approve / Revoke Connection** | ✅ | ❌ | ❌ | ❌ | ✅ (Approve/Revoke) |
+| **Platform Organization Management** | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+---
+
+## Security Principles
+
+1. **Item-Level Guest Scoping**:
+   `Cross-Org Guest` permissions only apply to tickets or pull requests explicitly shared via `TicketShare` or `PRShare` join records. Guests are strictly isolated from all unshared tenant data.
+
+2. **Platform Super Admin Boundaries**:
+   `Platform Super Admin` is restricted to platform-level connections, tenant provisioning, and global platform auditing. It does not provide an un-audited backdoor into an organization's private tickets or code reviews.

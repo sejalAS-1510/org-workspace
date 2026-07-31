@@ -1,74 +1,53 @@
-# Decisions & Tradeoffs
+# Architectural Decision Records (ADRs) & Trade-offs
 
-One line per non-obvious choice, added as I build — this doubles as my
-interview prep sheet. Newest at bottom.
+This document outlines key technical decisions, security trade-offs, and design rationale made during the development of the Unified Org Workspace platform.
 
-- **Single Next.js app instead of two separately deployed services.**
-  Fastest path to a working, coherent product in the timeline available.
-  Module boundaries (`lib/identity`, `lib/tickets`, `lib/prs`,
-  `lib/audit`) are real even though the deployment isn't split. Tradeoff:
-  doesn't yet demonstrate independent deploy/scale of the two dashboards.
-  Next step: extract Identity as its own service issuing JWTs the other
-  two verify via a shared public key.
+---
 
-- **JWT carries `userId`, `activeOrgId`, `role`; org-switch re-issues a
-  token rather than mutating claims server-side.** Keeps verification
-  stateless (no DB hit on every request). Tradeoff: revocation needs a
-  side-channel check — solved via `tokenVersion` on `User`, bumped on
-  logout-everywhere and checked on each request.
+## 1. Single Application Monorepo vs. Separately Deployed Microservices
 
-- **Ticket/PR sharing modeled as an explicit join table
-  (`TicketShare`/`PRShare`), never a loosened org filter.** Keeps the
-  isolation invariant — "every query filters by orgId unless via an
-  explicit, revocable share record" — true everywhere, including the
-  BOLA test. No org-to-org blanket grant exists anywhere in the schema.
+- **Decision**: Implemented identity, ticketing, PR workflows, and audit logging as distinct internal modules within a unified Next.js App Router project (`/lib`).
+- **Rationale**: Reduces deployment friction and inter-service latency while maintaining strict domain module boundaries (`lib/identity`, `lib/tickets`, `lib/prs`, `lib/audit`).
+- **Trade-off**: Does not showcase multi-origin deployment isolation. 
+- **Future Scaling**: Extract the Identity module into a standalone microservice issuing RS256-signed JWTs, verified statelessly by independent dashboard apps.
 
-- **Forbidden responses are generic ("not found"), not "403: exists but
-  not yours."** Distinguishing 403 from 404 leaks whether an ID exists —
-  an enumeration side channel across tenant boundaries. Both cases return
-  the same shape.
+---
 
-- **Audit log append-only enforced via Postgres role grants, not just
-  "we don't call .update() in our code."** Application-level discipline
-  doesn't survive a compromised app server or a future teammate who
-  doesn't know the rule. DB grants do.
+## 2. Stateless JWT Sessions with Atomic Token Revocation
 
-- **AI digest writes its own AuditLog entry with `sourceRefs`** (the IDs
-  of every ticket/PR it drew from). Makes the "AI must never leak
-  cross-org data" test meaningful — it can assert on `sourceRefs`
-  directly, not just parse the summary text — and gives the audit viewer
-  a way to show provenance for AI-generated content, not just human
-  actions.
+- **Decision**: Encoded `userId`, `activeOrgId`, and `role` into HttpOnly JWT cookies, using a database `tokenVersion` check for global session revocation ("Logout Everywhere").
+- **Rationale**: Eliminates database lookups on standard authorized requests while ensuring instant session invalidation when a user triggers global logout.
+- **Trade-off**: Requires a lightweight database check on token verification to compare `tokenVersion`.
+- **Future Scaling**: Cache active `tokenVersion` keys in Redis with short TTLs to achieve sub-millisecond session validation.
 
-- **No Redis in this build; session revocation via DB + tokenVersion.**
-  Sufficient at this scale. Redis would help with session cache and rate
-  limiting in production — noted as a limitation, not silently omitted.
+---
 
-- **Digest delivery via a cron-triggered endpoint rather than a real job
-  queue.** BullMQ/similar would be the production choice for retries and
-  backpressure; a cron endpoint is enough to demonstrate "computed on a
-  schedule, not on page load," which is the actual requirement being
-  tested.
+## 3. Join-Table Resource Sharing vs. Blanket Tenant Authorization
 
-## Questions I expect in the interview (and my answers)
+- **Decision**: Modeled cross-organization sharing via explicit join models (`TicketShare`, `PRShare`), rather than loosening tenant `orgId` filters.
+- **Rationale**: Preserves the core security invariant: every database query strictly filters by `activeOrgId` unless an explicit, revocable share record exists.
+- **Trade-off**: Requires explicit `OR` query joins when listing shared items.
 
-- *"Walk me through what happens when I hit `/api/tickets/123` with
-  someone else's ticket ID."* → traced through `getTicketScoped` in
-  `lib/authz/withOrgScope.ts`: single `findFirst` with an `OR` of
-  (owned by activeOrgId) or (explicitly shared with activeOrgId/userId);
-  no match → generic `ForbiddenError` → route handler returns 404.
+---
 
-- *"How do you know the audit log can't be tampered with by the app
-  itself?"* → Postgres `REVOKE UPDATE, DELETE ... FROM app_runtime`; the
-  app's own DB credentials physically cannot modify existing rows,
-  independent of application code correctness.
+## 4. Generic Security Responses for Cross-Tenant Resource Isolation
 
-- *"What's the difference between a shared ticket and a normal one, from
-  the query's perspective?"* → None at the read layer — both resolve
-  through the same `getTicketScoped` OR clause. They diverge at the
-  mutation layer: shared access only ever reaches
-  `commentOnSharedOrOwnedTicket`, never `updateTicketScoped`.
+- **Decision**: Return generic `404 Not Found` responses when users attempt to access unauthorized cross-tenant resources by manipulating IDs (BOLA protection).
+- **Rationale**: Returning `403 Forbidden` leaks resource existence to unauthorized actors, creating a resource enumeration vulnerability.
+- **Trade-off**: Slightly less detailed API error messages for frontend debugging.
 
-- *"If you had another week, what's the first thing you'd change?"* →
-  Split Identity into a real separate service; move digest delivery to a
-  proper job queue; add Redis for session cache and rate limiting.
+---
+
+## 5. Append-Only Database Security Model for Audit Logs
+
+- **Decision**: Enforced append-only audit rules through strict Prisma scoping and database-level permissions.
+- **Rationale**: Application-level discipline alone cannot protect audit trails from compromised application logic or raw SQL execution.
+- **Trade-off**: Requires separate migration roles when altering table schemas.
+
+---
+
+## 6. Scheduled Background Digest Execution vs. Page-Load Calculation
+
+- **Decision**: Processed user activity digests via background cron triggers (`/api/cron/digest`) rather than computing summaries dynamically on page load.
+- **Rationale**: Prevents heavy analytical database queries during client navigation and ensures digests represent consistent scheduled snapshots.
+- **Trade-off**: Digest data reflects the last scheduled execution interval rather than real-time state.

@@ -56,10 +56,12 @@ const MATRIX: Record<Role, Permission[]> = {
     "ticket:read:own_org",
     "ticket:update",
     "ticket:comment:own_org",
+    "pr:create",
   ],
   REVIEWER_APPROVER: [
     "ticket:read:own_org",
     "ticket:comment:own_org",
+    "pr:create",
     "pr:review",
     "pr:approve",
     "audit:read:unified",

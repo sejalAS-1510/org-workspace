@@ -1,29 +1,36 @@
 # Agentic IDE & LLM Usage Disclosure
 
-Per Page 3 of the Take-Home Assignment specifications, this document details the AI tools and Agentic IDEs used during the development of this project, including reasoning, pros, and cons.
+This document details the AI systems and Agentic IDE tools utilized during the development of the Unified Org Workspace platform, including architectural rationale, key benefits, and technical trade-offs.
 
 ---
 
-## 🤖 AI Assistant Used
-- **Agentic AI System**: Google DeepMind Antigravity CLI / IDE (`agy`).
-- **Core Reasoning Engine**: Gemini 2.5 Pro / Flash.
+## AI Systems & Tools
+
+- **Agentic AI Platform**: Google DeepMind Antigravity CLI / IDE (`agy`).
+- **Core Reasoning Engines**: Gemini 2.5 Pro / Flash.
 
 ---
 
-## 🎯 Reasoning for Tool Selection
-1. **Architectural Verification**: Used agentic tool loops to enforce single choke-point query isolation (`withOrgScope.ts`) across all 16 Next.js API route handlers.
-2. **Rapid Test Suite Creation**: Automated the setup of Vitest test fixtures (`tests/isolation.test.ts` & `tests/digest-leak.test.ts`) to prove zero BOLA cross-tenant data leaks.
-3. **UI Craftsmanship & Micro-Interactions**: Generated responsive Tailwind styling with dynamic Light/Dark mode CSS custom variables (`--bg-main`, `--bg-card`, `--text-main`).
+## Strategic Rationale & Tool Application
+
+1. **Query Isolation & BOLA Protection**:
+   Used agentic verification loops to ensure all 16 Next.js API route handlers invoke the central query choke-point (`lib/authz/withOrgScope.ts`), preventing Broken Object Level Authorization vulnerabilities.
+
+2. **Automated Security Test Suites**:
+   Generated Vitest test suites (`tests/isolation.test.ts` & `tests/digest-leak.test.ts`) to verify cross-tenant data isolation and ensure AI digest summaries never leak unauthorized organization data.
+
+3. **System Documentation & Diagrams**:
+   Constructed mermaid architecture charts, role-based access control (RBAC) matrices, and comprehensive environment setup guides.
 
 ---
 
-## ⚖️ Pros and Cons
+## Technical Evaluation: Benefits & Trade-Offs
 
-### Pros
-- **Zero-BOLA Assurance**: Automated security unit tests immediately caught missing tenant filters during development.
-- **High Developer Velocity**: Built full-stack Next.js App Router API handlers, Prisma schemas, and responsive React frontend components in record time.
-- **Comprehensive Documentation**: Automatically generated mermaid architecture diagrams, RBAC permission matrices, and OpenAPI-style route specs.
+### Benefits
+- **Strict Multi-Tenant Invariants**: Automated test assertion generation verified zero BOLA leaks across ticket, pull request, and audit log endpoints.
+- **Development Velocity**: Accelerated full-stack Next.js App Router route handlers, Prisma database schemas, and React frontend components.
+- **Standardized API Contracts**: Ensured consistent error shapes and HttpOnly JWT cookie session handling.
 
-### Cons & Mitigations
-- **Port Conflict Awareness**: Background dev servers occasionally locked port `3001` during hot reloads; resolved by introducing explicit process cleanup (`taskkill` / `pkill`) and Docker healthchecks.
-- **SQLite Enum Mappings**: SQLite provider required mapping TypeScript string union types (`OrgRole`, `ReviewDecision`) instead of native Prisma enums; mitigated by exporting strict TypeScript type aliases in `lib/identity/auth.ts`.
+### Trade-Offs & Engineering Mitigations
+- **Port Conflict Handling**: Hot-reloading background dev servers occasionally held lock on port `3001`; mitigated by integrating automated process cleanup (`taskkill` / `pkill`) into dev scripts.
+- **SQLite Union Mapping**: Handled SQLite TypeScript string union type mappings (`OrgRole`, `ReviewDecision`) by exporting type guards in `lib/identity/auth.ts`.

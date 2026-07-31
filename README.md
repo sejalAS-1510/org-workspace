@@ -61,27 +61,17 @@ A multi-tenant enterprise workspace platform featuring a shared JWT identity lay
 
 ---
 
-## Role-Based Access Control (RBAC)
+## Role-Based Access Control (RBAC) & Demo Credentials
 
-| Role | Scope of Access |
-| :--- | :--- |
-| **Org Admin** | Full administration within their organization across both dashboards |
-| **Support Agent** | Support Hub only; manages organization tickets |
-| **Reviewer / Approver** | Both dashboards: PR review workflow, ticket reviews, and unified audit viewer |
-| **Cross-Org Guest** | Read & comment access to explicitly shared tickets/PRs from partner orgs |
-| **Platform Super Admin** | Platform-wide management, cross-org connection oversight, and global settings |
+Password for all demo accounts: **`Passw0rd!`**
 
----
-
-## Demo Test Credentials
-
-| Email | Password | Role | Organization |
-| :--- | :--- | :--- | :--- |
-| `alice@acme.com` | `Password123!` | Org Admin | Acme Corp |
-| `bob@acme.com` | `Password123!` | Member | Acme Corp |
-| `carol@globex.com` | `Password123!` | Org Admin | Globex Inc |
-| `dave@globex.com` | `Password123!` | Member | Globex Inc |
-| `admin@platform.com` | `Password123!` | Platform Super Admin | Cross-Org Platform Scope |
+| Email | Password | Role | Organization | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `admin@acme.test` | `Passw0rd!` | ORG_ADMIN | Acme Corp | Full admin access across both dashboards |
+| `agent@acme.test` | `Passw0rd!` | SUPPORT_AGENT | Acme Corp | Manages Support Hub tickets |
+| `reviewer@acme.test` | `Passw0rd!` | REVIEWER_APPROVER | Acme Corp | Reviews tickets, approves PRs, and views audit logs |
+| `guest@globex.test` | `Passw0rd!` | CROSS_ORG_GUEST | Globex Inc | Restricted access to explicitly shared items |
+| `super@platform.test` | `Passw0rd!` | PLATFORM_SUPER_ADMIN | Platform Scope | Platform-wide management and global settings |
 
 ---
 
